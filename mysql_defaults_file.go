@@ -106,6 +106,8 @@ func build_dsn(components map[string]string, database string) string {
 			_, ok := components["port"]
 			if ok {
 				host_port += ":" + components["port"] // stored as string so no need to convert
+			} else {
+				host_port += ":3306" // we always need _some_ port so if we don't provide one assume MySQL's default port
 			}
 
 			dsn += "@tcp(" + host_port + ")/"
