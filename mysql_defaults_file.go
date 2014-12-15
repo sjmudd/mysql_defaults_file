@@ -37,7 +37,7 @@ func convert_filename(filename string) string {
 	return filename
 }
 
-// read the defaults file and return the values
+// Read the given defaults file and return the different parameter values as a map.
 func defaults_file_components(defaults_file string) map[string]string {
 	defaults_file = convert_filename(defaults_file)
 
@@ -77,9 +77,9 @@ func defaults_file_components(defaults_file string) map[string]string {
 	return components
 }
 
-// build the dsn we're going to use to connect with based on the
-// components in the defaults file
-func build_dsn(components map[string]string, database string) string {
+// Build the dsn we're going to use to connect with based on a
+// parameter / value string map and return the dsn as a string.
+func BuildDSN(components map[string]string, database string) string {
 	dsn := ""
 
 	// USER
@@ -135,7 +135,7 @@ func OpenUsingDefaultsFile(sql_driver string, defaults_file string, database str
 		defaults_file = "~/.my.cnf"
 	}
 
-	new_dsn := build_dsn(defaults_file_components(defaults_file), database)
+	new_dsn := BuildDSN(defaults_file_components(defaults_file), database)
 
 	return sql.Open(sql_driver, new_dsn)
 }
