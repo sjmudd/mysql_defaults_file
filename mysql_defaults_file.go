@@ -1,4 +1,4 @@
-// mysql_defaults_file provides a way of accessing MySQL via a defaults-file.
+// Package mysql_defaults_file provides a way of accessing MySQL via a defaults-file.
 package mysql_defaults_file
 
 import (
@@ -11,24 +11,24 @@ import (
 
 // There must be a better way of doing this. Fix me...
 // Return the environment value of a given name.
-func get_environ(name string) string {
+func getEnviron(name string) string {
 	for i := range os.Environ() {
 		s := os.Environ()[i]
-		k_v := strings.Split(s, "=")
+		kV := strings.Split(s, "=")
 
-		if k_v[0] == name {
-			return k_v[1]
+		if kV[0] == name {
+			return kV[1]
 		}
 	}
 	return ""
 }
 
 // convert ~ to $HOME
-func convert_filename(filename string) string {
+func convertFilename(filename string) string {
 	for i := range filename {
 		if filename[i] == '~' {
 			//			fmt.Println("Filename before", filename )
-			filename = filename[:i] + get_environ("HOME") + filename[i+1:]
+			filename = filename[:i] + getEnviron("HOME") + filename[i+1:]
 			//			fmt.Println("Filename after", filename )
 			break
 		}
@@ -38,12 +38,12 @@ func convert_filename(filename string) string {
 }
 
 // Read the given defaults file and return the different parameter values as a map.
-func defaults_file_components(defaults_file string) map[string]string {
-	defaults_file = convert_filename(defaults_file)
+func defaultsFileComponents(defaultsFile string) map[string]string {
+	defaultsFile = convertFilename(defaultsFile)
 
 	components := make(map[string]string)
 
-	i, err := go_ini.LoadFile(defaults_file)
+	i, err := go_ini.LoadFile(defaultsFile)
 	if err != nil {
 		log.Fatal("Could not load ini file", err)
 	}
@@ -77,7 +77,7 @@ func defaults_file_components(defaults_file string) map[string]string {
 	return components
 }
 
-// Build the dsn we're going to use to connect with based on a
+// BuildDSN builds the dsn we're going to use to connect with based on a
 // parameter / value string map and return the dsn as a string.
 func BuildDSN(components map[string]string, database string) string {
 	dsn := ""
@@ -87,7 +87,7 @@ func BuildDSN(components map[string]string, database string) string {
 	if ok {
 		dsn = components["user"]
 	} else {
-		dsn = get_environ("USER")
+		dsn = getEnviron("USER")
 	}
 	// PASSWORD
 	_, ok = components["password"]
@@ -96,21 +96,21 @@ func BuildDSN(components map[string]string, database string) string {
 	}
 
 	// SOCKET or HOST? SOCKET TAKES PRECEDENCE if both defined.
-	_, ok_socket := components["socket"]
-	_, ok_host := components["host"]
-	if ok_socket || ok_host {
-		if ok_socket {
+	_, okSocket := components["socket"]
+	_, okHost := components["host"]
+	if okSocket || okHost {
+		if okSocket {
 			dsn += "@unix(" + components["socket"] + ")/"
 		} else {
-			host_port := components["host"]
+			hostPort := components["host"]
 			_, ok := components["port"]
 			if ok {
-				host_port += ":" + components["port"] // stored as string so no need to convert
+				hostPort += ":" + components["port"] // stored as string so no need to convert
 			} else {
-				host_port += ":3306" // we always need _some_ port so if we don't provide one assume MySQL's default port
+				hostPort += ":3306" // we always need _some_ port so if we don't provide one assume MySQL's default port
 			}
 
-			dsn += "@tcp(" + host_port + ")/"
+			dsn += "@tcp(" + hostPort + ")/"
 		}
 	} else {
 		dsn += "@/" // but I'm guessing here.
@@ -129,13 +129,13 @@ func BuildDSN(components map[string]string, database string) string {
 	return dsn
 }
 
-// open a connection only using a defaults file
-func OpenUsingDefaultsFile(sql_driver string, defaults_file string, database string) (*sql.DB, error) {
-	if defaults_file == "" {
-		defaults_file = "~/.my.cnf"
+// OpenUsingDefaultsFile opens a connection only using a defaults file
+func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database string) (*sql.DB, error) {
+	if defaultsFile == "" {
+		defaultsFile = "~/.my.cnf"
 	}
 
-	new_dsn := BuildDSN(defaults_file_components(defaults_file), database)
+	newDSN := BuildDSN(defaultsFileComponents(defaultsFile), database)
 
-	return sql.Open(sql_driver, new_dsn)
+	return sql.Open(sqlDriver, newDSN)
 }
