@@ -6,30 +6,13 @@ import (
 	go_ini "github.com/vaughan0/go-ini" // not sure what to do with dashes in names
 	"log"
 	"os"
-	"strings"
 )
-
-// There must be a better way of doing this. Fix me...
-// Return the environment value of a given name.
-func getEnviron(name string) string {
-	for i := range os.Environ() {
-		s := os.Environ()[i]
-		kV := strings.Split(s, "=")
-
-		if kV[0] == name {
-			return kV[1]
-		}
-	}
-	return ""
-}
 
 // convert ~ to $HOME
 func convertFilename(filename string) string {
 	for i := range filename {
 		if filename[i] == '~' {
-			//			fmt.Println("Filename before", filename )
-			filename = filename[:i] + getEnviron("HOME") + filename[i+1:]
-			//			fmt.Println("Filename after", filename )
+			filename = filename[:i] + os.Getenv("HOME") + filename[i+1:]
 			break
 		}
 	}
@@ -87,7 +70,7 @@ func BuildDSN(components map[string]string, database string) string {
 	if ok {
 		dsn = components["user"]
 	} else {
-		dsn = getEnviron("USER")
+		dsn = os.Getenv("USER")
 	}
 	// PASSWORD
 	_, ok = components["password"]
