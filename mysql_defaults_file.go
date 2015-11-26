@@ -3,6 +3,7 @@ package mysql_defaults_file
 
 import (
 	"database/sql"
+	"errors"
 	go_ini "github.com/vaughan0/go-ini" // not sure what to do with dashes in names
 	"log"
 	"os"
@@ -121,4 +122,13 @@ func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database strin
 	newDSN := BuildDSN(defaultsFileComponents(defaultsFile), database)
 
 	return sql.Open(sqlDriver, newDSN)
+}
+
+// OpenUsingEnvironment will assume MYSQL_DSN is set and use that value for connecting.
+func OpenUsingEnvironment(sqlDriver string) (*sql.DB, error) {
+	if os.Getenv("MYSQL_DSN") == "" {
+		return nil, errors.New("MYSQL_DSN not set or empty")
+	}
+
+	return sql.Open(sqlDriver, os.Getenv("MYSQL_DSN"))
 }
