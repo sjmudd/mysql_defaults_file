@@ -4,9 +4,10 @@ package mysql_defaults_file
 import (
 	"database/sql"
 	"errors"
-	"github.com/vaughan0/go-ini"
 	"log"
 	"os"
+
+	"github.com/vaughan0/go-ini"
 )
 
 // convert ~ to $HOME
