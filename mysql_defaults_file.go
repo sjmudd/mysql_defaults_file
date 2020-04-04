@@ -4,7 +4,7 @@ package mysql_defaults_file
 import (
 	"database/sql"
 	"errors"
-	go_ini "github.com/vaughan0/go-ini" // not sure what to do with dashes in names
+	"github.com/vaughan0/go-ini"
 	"log"
 	"os"
 )
@@ -27,7 +27,7 @@ func defaultsFileComponents(defaultsFile string) map[string]string {
 
 	components := make(map[string]string)
 
-	i, err := go_ini.LoadFile(defaultsFile)
+	i, err := ini.LoadFile(defaultsFile)
 	if err != nil {
 		log.Fatal("Could not load ini file", err)
 	}
