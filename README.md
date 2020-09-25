@@ -20,7 +20,7 @@ dsn for MySQL using various string to string map components such as
 host, user, password, port or socket, and thus removing the need to
 figure out the Go specific DSN format.
 
-Both these functions are used by [pstop](http://github.com/sjmudd/pstop)
+Both these functions are used by [ps-top](http://github.com/sjmudd/ps-top)
 to simplify the connectivity and have been split off from it as they
 may be useful for other programs that connect to  MySQL.
 
