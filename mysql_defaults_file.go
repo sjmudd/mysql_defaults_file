@@ -64,6 +64,12 @@ func defaultsFileComponents(defaultsFile string) map[string]string {
 
 // BuildDSN builds the dsn we're going to use to connect with based on a
 // parameter / value string map and return the dsn as a string.
+//
+// Note: components should be replaced with the mysql.Config structures
+// and then we can use Config.FormatDSN() to generate the dsn directly.
+// However, there are some differences between mysql.Config default behaviour
+// and that from the mysql command line such as timezone handling that would
+// need to be taken into account.
 func BuildDSN(components map[string]string, database string) string {
 	dsn := ""
 
@@ -109,6 +115,12 @@ func BuildDSN(components map[string]string, database string) string {
 			dsn += components["database"]
 		}
 	}
+
+	// Hard-code allowNativePassword=true for consistent behaviour
+	// with mysql command line when talking to a 8.0 server using
+	// caching-sha2 and trying to authenticate a user with
+	// mysql-native-password.
+	dsn += "&allowNativePasswords=true"
 
 	//	fmt.Println("final dsn from defaults file:", dsn )
 	return dsn

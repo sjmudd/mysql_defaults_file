@@ -20,9 +20,15 @@ dsn for MySQL using various string to string map components such as
 host, user, password, port or socket, and thus removing the need to
 figure out the Go specific DSN format.
 
-Both these functions are used by [ps-top](http://github.com/sjmudd/ps-top)
+This logic could be simplified by using
+github.com/go-sql-driver/mysql.Config together with Config.FormatDSN(),
+but there are a few minor differences in behaviour such as the
+default timezone handling using mysql.Config being UTC compared to
+mysql's command line client using the system timezone.
+
+The functions provided are used by [ps-top](http://github.com/sjmudd/ps-top)
 to simplify the connectivity and have been split off from it as they
-may be useful for other programs that connect to  MySQL.
+may be useful for other programs that connect to MySQL.
 
 ### Usage
 
