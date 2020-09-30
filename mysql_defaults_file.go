@@ -120,7 +120,7 @@ func BuildDSN(components map[string]string, database string) string {
 	// with mysql command line when talking to a 8.0 server using
 	// caching-sha2 and trying to authenticate a user with
 	// mysql-native-password.
-	dsn += "&allowNativePasswords=true"
+	dsn += "?allowNativePasswords=true"
 
 	//	fmt.Println("final dsn from defaults file:", dsn )
 	return dsn
