@@ -6,9 +6,12 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strings"
 
 	"github.com/vaughan0/go-ini"
 )
+
+var quoteChars = []byte(`"'`)
 
 // convert ~ to $HOME
 func convertFilename(filename string) string {
@@ -20,6 +23,21 @@ func convertFilename(filename string) string {
 	}
 
 	return filename
+}
+
+// quoteTrim will remove leading/trailing whitespace and if the value
+// looks like a quoted string remove the quotes.
+func quoteTrim(val string) string {
+	val = strings.TrimSpace(val)
+	lenval := len(val)
+	if lenval >= 2 {
+		for _, ch := range quoteChars {
+			if val[0] == ch && val[lenval-1] == ch {
+				return val[1 : lenval-1]
+			}
+		}
+	}
+	return val
 }
 
 // Read the given defaults file and return the different parameter values as a map.
@@ -40,7 +58,8 @@ func defaultsFileComponents(defaultsFile string) map[string]string {
 	}
 	password, ok := section["password"]
 	if ok {
-		components["password"] = password
+		// password may have odd characters so trim if quoted
+		components["password"] = quoteTrim(password)
 	}
 	socket, ok := section["socket"]
 	if ok {
