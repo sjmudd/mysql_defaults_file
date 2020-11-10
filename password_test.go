@@ -23,7 +23,7 @@ func TestPassword(t *testing.T) {
 		{"127.0.0.1", "root", "testpassword3"},
 	}
 
-	for i, _ := range testIniFiles {
+	for i := range testIniFiles {
 		components := defaultsFileComponents(testIniFiles[i])
 		if components["host"] != testInfo[i].host ||
 			components["user"] != testInfo[i].user ||
