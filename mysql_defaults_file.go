@@ -28,7 +28,7 @@ func convertFilename(filename string) string {
 // quoteTrim will remove leading/trailing whitespace and if the value
 // looks like a quoted string remove the quotes.
 func quoteTrim(val string) string {
-	val = strings.TrimSpace(val)
+dddd	val = strings.TrimSpace(val)
 	lenval := len(val)
 	if lenval >= 2 {
 		for _, ch := range quoteChars {
