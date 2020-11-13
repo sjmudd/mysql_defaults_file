@@ -30,9 +30,9 @@ The functions provided are used by [ps-top](http://github.com/sjmudd/ps-top)
 to simplify the connectivity and have been split off from it as they
 may be useful for other programs that connect to MySQL.
 
-The code has been extended to handle quoted passwords, removing
-whitespace and quotes if found. Quoting with single or double quotes is
-permitted.
+The code has been extended to handle quoted usernames and passwords,
+removing whitespace and quotes if found. Quoting with single or
+double quotes is permitted.
 
 ### Usage
 
