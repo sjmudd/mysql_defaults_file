@@ -4,23 +4,25 @@ import (
 	"testing"
 )
 
-type userPasswordHost struct {
+type hostUserPassword struct {
 	host     string
 	user     string
 	password string
 }
 
 // check the different quoted passwords work
-func TestPassword(t *testing.T) {
+func TestUserAndPassword(t *testing.T) {
 	testIniFiles := []string{
 		"testdata/my1.ini",
 		"testdata/my2.ini",
 		"testdata/my3.ini",
+		"testdata/my4.ini",
 	}
-	testInfo := []userPasswordHost{
-		{"127.0.0.1", "root", "testpassword1"},
-		{"127.0.0.1", "root", "testpassword2"},
-		{"127.0.0.1", "root", "testpassword3"},
+	testInfo := []hostUserPassword{
+		{"127.0.0.1", "root1", "testpassword1"},
+		{"127.0.0.1", "root1", "testpassword2"},
+		{"127.0.0.1", "root1", "testpassword3"},
+		{"127.0.0.1", "root4", "testpassword1"},
 	}
 
 	for i := range testIniFiles {

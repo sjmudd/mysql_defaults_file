@@ -54,7 +54,8 @@ func defaultsFileComponents(defaultsFile string) map[string]string {
 
 	user, ok := section["user"]
 	if ok {
-		components["user"] = user
+		// user may have odd characters or be quoted so trim if necessary
+		components["user"] = quoteTrim(user)
 	}
 	password, ok := section["password"]
 	if ok {
