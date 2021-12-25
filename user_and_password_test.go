@@ -41,5 +41,4 @@ func TestUserAndPassword(t *testing.T) {
 			)
 		}
 	}
-
 }
