@@ -22,7 +22,7 @@ func TestUserAndPassword(t *testing.T) {
 	}
 
 	for i := range testIniFiles {
-		config := newConfig(testIniFiles[i])
+		config := NewConfig(testIniFiles[i])
 		expected := wanted[i]
 		if config.Host != expected.Host ||
 			config.User != expected.User ||

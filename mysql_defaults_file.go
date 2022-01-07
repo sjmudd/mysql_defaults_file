@@ -54,8 +54,8 @@ func quoteTrim(val string) string {
 	return val
 }
 
-// Read the given defaults file and return a configuration struct.
-func newConfig(defaultsFile string) Config {
+// NewConfig creates a Config struct using the values from the provided defaults file.
+func NewConfig(defaultsFile string) Config {
 	var config Config
 
 	defaultsFile = convertFilename(defaultsFile)
@@ -164,7 +164,7 @@ func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database strin
 		defaultsFile = "~/.my.cnf"
 	}
 
-	return sql.Open(sqlDriver, BuildDSN(newConfig(defaultsFile), database))
+	return sql.Open(sqlDriver, BuildDSN(NewConfig(defaultsFile), database))
 }
 
 // Open just wraps OpenUsingDefaultsFile, assuming "mysql" as the driver.
