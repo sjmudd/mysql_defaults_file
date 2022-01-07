@@ -6,12 +6,26 @@ import (
 	"errors"
 	"log"
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/vaughan0/go-ini"
 )
 
+const defaultMySQLPort = 3306
+
 var quoteChars = []byte(`"'`)
+
+// Config holds the configuration taken out of the defaults file.
+type Config struct {
+	Filename string
+	User     string
+	Password string
+	Socket   string
+	Host     string
+	Port     uint16
+	Database string
+}
 
 // convert ~ to $HOME
 func convertFilename(filename string) string {
@@ -40,11 +54,12 @@ func quoteTrim(val string) string {
 	return val
 }
 
-// Read the given defaults file and return the different parameter values as a map.
-func defaultsFileComponents(defaultsFile string) map[string]string {
-	defaultsFile = convertFilename(defaultsFile)
+// Read the given defaults file and return a configuration struct.
+func newConfig(defaultsFile string) Config {
+	var config Config
 
-	components := make(map[string]string)
+	defaultsFile = convertFilename(defaultsFile)
+	config.Filename = defaultsFile
 
 	i, err := ini.LoadFile(defaultsFile)
 	if err != nil {
@@ -55,70 +70,68 @@ func defaultsFileComponents(defaultsFile string) map[string]string {
 	user, ok := section["user"]
 	if ok {
 		// user may have odd characters or be quoted so trim if necessary
-		components["user"] = quoteTrim(user)
+		config.User = quoteTrim(user)
 	}
 	password, ok := section["password"]
 	if ok {
 		// password may have odd characters so trim if quoted
-		components["password"] = quoteTrim(password)
+		config.Password = quoteTrim(password)
 	}
 	socket, ok := section["socket"]
 	if ok {
-		components["socket"] = socket
+		config.Socket = socket
 	}
 	host, ok := section["host"]
 	if ok {
-		components["host"] = host
+		config.Host = host
 	}
 	port, ok := section["port"]
 	if ok {
-		components["port"] = port
+		port, err := strconv.Atoi(port)
+		if err == nil {
+			config.Port = uint16(port)
+		}
 	}
 	database, ok := section["database"]
 	if ok {
-		components["database"] = database
+		config.Database = database
 	}
 
-	return components
+	return config
 }
 
 // BuildDSN builds the dsn we're going to use to connect with based on a
 // parameter / value string map and return the dsn as a string.
 //
-// Note: components should be replaced with the mysql.Config structures
+// Note: Config should be replaced with the mysql.Config structure
 // and then we can use Config.FormatDSN() to generate the dsn directly.
 // However, there are some differences between mysql.Config default behaviour
 // and that from the mysql command line such as timezone handling that would
 // need to be taken into account.
-func BuildDSN(components map[string]string, database string) string {
+func BuildDSN(config Config, database string) string {
 	dsn := ""
 
 	// USER
-	_, ok := components["user"]
-	if ok {
-		dsn = components["user"]
+	if config.User != "" {
+		dsn = config.User
 	} else {
 		dsn = os.Getenv("USER")
 	}
 	// PASSWORD
-	_, ok = components["password"]
-	if ok {
-		dsn += ":" + components["password"]
+	if config.Password != "" {
+		dsn += ":" + config.Password
 	}
 
 	// SOCKET or HOST? SOCKET TAKES PRECEDENCE if both defined.
-	_, okSocket := components["socket"]
-	_, okHost := components["host"]
-	if okSocket || okHost {
-		if okSocket {
-			dsn += "@unix(" + components["socket"] + ")/"
+	if config.Socket != "" || config.Host != "" {
+		if config.Socket != "" {
+			dsn += "@unix(" + config.Socket + ")/"
 		} else {
-			hostPort := components["host"]
-			_, ok := components["port"]
-			if ok {
-				hostPort += ":" + components["port"] // stored as string so no need to convert
+			hostPort := config.Host
+			if config.Port != 0 {
+				hostPort += ":" + strconv.Itoa(int(config.Port))
 			} else {
-				hostPort += ":3306" // we always need _some_ port so if we don't provide one assume MySQL's default port
+				hostPort += ":" + strconv.Itoa(defaultMySQLPort)
 			}
 
 			dsn += "@tcp(" + hostPort + ")/"
@@ -127,12 +140,11 @@ func BuildDSN(components map[string]string, database string) string {
 		dsn += "@/" // but I'm guessing here.
 	}
 
-	if len(database) > 0 {
+	if database != "" {
 		dsn += database
 	} else {
-		_, ok := components["database"]
-		if ok {
-			dsn += components["database"]
+		if config.Database != "" {
+			dsn += config.Database
 		}
 	}
 
@@ -152,9 +164,7 @@ func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database strin
 		defaultsFile = "~/.my.cnf"
 	}
 
-	newDSN := BuildDSN(defaultsFileComponents(defaultsFile), database)
-
-	return sql.Open(sqlDriver, newDSN)
+	return sql.Open(sqlDriver, BuildDSN(newConfig(defaultsFile), database))
 }
 
 // OpenUsingEnvironment will assume MYSQL_DSN is set and use that value for connecting.

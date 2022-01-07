@@ -16,9 +16,7 @@ to connect to MySQL using a specified defaults-file, or using the
 `~/.my.cnf` if you do not specify a defaults-file path.
 
 There is also a function BuildDSN which allows you to build up a Go
-dsn for MySQL using various string to string map components such as
-host, user, password, port or socket, and thus removing the need to
-figure out the Go specific DSN format.
+dsn for MySQL using various entries in a mysql .ini file.
 
 This logic could be simplified by using
 github.com/go-sql-driver/mysql.Config together with Config.FormatDSN(),
