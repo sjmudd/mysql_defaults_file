@@ -167,6 +167,11 @@ func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database strin
 	return sql.Open(sqlDriver, BuildDSN(newConfig(defaultsFile), database))
 }
 
+// Open just wraps OpenUsingDefaultsFile, assuming "mysql" as the driver.
+func Open(defaultsFile string, database string) (*sql.DB, error) {
+	return OpenUsingDefaultsFile("mysql", defaultsFile, database)
+}
+
 // OpenUsingEnvironment will assume MYSQL_DSN is set and use that value for connecting.
 func OpenUsingEnvironment(sqlDriver string) (*sql.DB, error) {
 	if os.Getenv("MYSQL_DSN") == "" {

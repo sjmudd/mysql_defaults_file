@@ -46,8 +46,14 @@ import (
 	...
 )
 
-// open the connection to the database using the default defaults-file.
+// open the connection to the database using the default defaults-file (original way).
 dbh, err = mysql_defaults_file.OpenUsingDefaultsFile("mysql", "", "performance_schema")
+
+// open the connection to the database using the default defaults-file (shorter form).
+dbh, err = mysql_defaults_file.Open("", "")
+
+// open the connection to the database using a specific defaults-file and to mydb.
+dbh, err = mysql_defaults_file.Open("/path/to/my.ini", "mydb")
 ```
 
 The errors you get back will be the same as calling `sql.Open( "mysql",..... )`.
