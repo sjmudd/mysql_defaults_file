@@ -12,7 +12,10 @@ import (
 	"github.com/vaughan0/go-ini"
 )
 
-const defaultMySQLPort = 3306
+const (
+	defaultMySQLPort   = 3306
+	defaultMySQLDriver = "mysql"
+)
 
 var quoteChars = []byte(`"'`)
 
@@ -55,15 +58,20 @@ func quoteTrim(val string) string {
 }
 
 // NewConfig creates a Config struct using the values from the provided defaults file.
+// - if defaultsFile is empty use the default of ~/.my.cnf
 func NewConfig(defaultsFile string) Config {
 	var config Config
+
+	if defaultsFile == "" {
+		defaultsFile = "~/.my.cnf"
+	}
 
 	defaultsFile = convertFilename(defaultsFile)
 	config.Filename = defaultsFile
 
 	i, err := ini.LoadFile(defaultsFile)
 	if err != nil {
-		log.Fatal("Could not load ini file", err)
+		log.Fatalf("Could not load defaults-file %q: %v", defaultsFile, err)
 	}
 	section := i.Section("client")
 
@@ -160,16 +168,12 @@ func BuildDSN(config Config, database string) string {
 
 // OpenUsingDefaultsFile opens a connection only using a defaults file
 func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database string) (*sql.DB, error) {
-	if defaultsFile == "" {
-		defaultsFile = "~/.my.cnf"
-	}
-
 	return sql.Open(sqlDriver, BuildDSN(NewConfig(defaultsFile), database))
 }
 
 // Open just wraps OpenUsingDefaultsFile, assuming "mysql" as the driver.
 func Open(defaultsFile string, database string) (*sql.DB, error) {
-	return OpenUsingDefaultsFile("mysql", defaultsFile, database)
+	return OpenUsingDefaultsFile(defaultMySQLDriver, defaultsFile, database)
 }
 
 // OpenUsingEnvironment will assume MYSQL_DSN is set and use that value for connecting.
