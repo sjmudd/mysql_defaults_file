@@ -46,14 +46,22 @@ import (
 	...
 )
 
+// Get the DSN information from the defaults file, provide the
+// database to connect to and use sql.Open as normal
+db, err = sql.Open("mysql", mysql_defaults_file.DefaultDSN("", "mydb"))
+
+// Get the DSN from a non-standard defaults file, provide the
+// database to connect to and use sql.Open as normal
+db, err = sql.Open("mysql", mysql_defaults_file.DefaultDSN("/path/to/.my.cnf", "mydb"))
+
 // open the connection to the database using the default defaults-file (original way).
-dbh, err = mysql_defaults_file.OpenUsingDefaultsFile("mysql", "", "performance_schema")
+db, err = mysql_defaults_file.OpenUsingDefaultsFile("mysql", "", "performance_schema")
 
 // open the connection to the database using the default defaults-file (shorter form).
-dbh, err = mysql_defaults_file.Open("", "")
+db, err = mysql_defaults_file.Open("", "")
 
 // open the connection to the database using a specific defaults-file and to mydb.
-dbh, err = mysql_defaults_file.Open("/path/to/my.ini", "mydb")
+db, err = mysql_defaults_file.Open("/path/to/my.ini", "mydb")
 ```
 
 The errors you get back will be the same as calling `sql.Open( "mysql",..... )`.
