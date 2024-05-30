@@ -166,9 +166,17 @@ func BuildDSN(config Config, database string) string {
 	return dsn
 }
 
+// BuildDSNFromDefaultsfile provides a dsn from the combination of a defaults file and the database to connect to
+// - this format is the simplest to use as if you have a ~/.my.cnf
+//   file you simply want to use this function to generate the dsn
+//   to connect to
+func BuildDSNFromDefaultsFile(defaultsFile string, database string) string {
+	return BuildDSN(NewConfig(defaultsFile), database)
+}
+
 // OpenUsingDefaultsFile opens a connection only using a defaults file
 func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database string) (*sql.DB, error) {
-	return sql.Open(sqlDriver, BuildDSN(NewConfig(defaultsFile), database))
+	return sql.Open(sqlDriver, BuildDSNFromDefaultsFile(defaultsFile, database))
 }
 
 // Open just wraps OpenUsingDefaultsFile, assuming "mysql" as the driver.
