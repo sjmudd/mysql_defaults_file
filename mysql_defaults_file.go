@@ -59,6 +59,9 @@ func quoteTrim(val string) string {
 
 // NewConfig creates a Config struct using the values from the provided defaults file.
 // - if defaultsFile is empty use the default of ~/.my.cnf
+//
+// Deprecated: NewConfig exits the program if the file cannot be read.
+// Use Load or LoadOptional, which return an error.
 func NewConfig(defaultsFile string) Config {
 	var config Config
 
@@ -116,6 +119,8 @@ func NewConfig(defaultsFile string) Config {
 // However, there are some differences between mysql.Config default behaviour
 // and that from the mysql command line such as timezone handling that would
 // need to be taken into account.
+//
+// Deprecated: use Config.DSN or Config.MySQLConfig.
 func BuildDSN(config Config, database string) string {
 	dsn := ""
 
@@ -167,24 +172,35 @@ func BuildDSN(config Config, database string) string {
 }
 
 // DefaultDSN provides a dsn from the combination of a defaults file and the database to connect to
-// - this format is the simplest to use as if you have a ~/.my.cnf
-//   file you simply want to use this function to generate the dsn
-//   to connect to
+//   - this format is the simplest to use as if you have a ~/.my.cnf
+//     file you simply want to use this function to generate the dsn
+//     to connect to
+//
+// Deprecated: use LoadOptional or Load, then Config.DSN.
 func DefaultDSN(defaultsFile string, database string) string {
 	return BuildDSN(NewConfig(defaultsFile), database)
 }
 
 // OpenUsingDefaultsFile opens a connection only using a defaults file
+//
+// Deprecated: use LoadOptional or Load, Config.MySQLConfig,
+// mysql.NewConnector and sql.OpenDB.
 func OpenUsingDefaultsFile(sqlDriver string, defaultsFile string, database string) (*sql.DB, error) {
 	return sql.Open(sqlDriver, DefaultDSN(defaultsFile, database))
 }
 
 // Open just wraps OpenUsingDefaultsFile, assuming "mysql" as the driver.
+//
+// Deprecated: use LoadOptional or Load, Config.MySQLConfig,
+// mysql.NewConnector and sql.OpenDB.
 func Open(defaultsFile string, database string) (*sql.DB, error) {
 	return OpenUsingDefaultsFile(defaultMySQLDriver, defaultsFile, database)
 }
 
 // OpenUsingEnvironment will assume MYSQL_DSN is set and use that value for connecting.
+//
+// Deprecated: it does not use an option file. Read MYSQL_DSN and call
+// sql.Open directly.
 func OpenUsingEnvironment(sqlDriver string) (*sql.DB, error) {
 	if os.Getenv("MYSQL_DSN") == "" {
 		return nil, errors.New("MYSQL_DSN not set or empty")

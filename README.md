@@ -1,70 +1,89 @@
 ## mysql_defaults_file
 
-Access in Go to MySQL via a defaults_file.
+Connect to MySQL from Go using the credentials in a MySQL option file,
+such as `~/.my.cnf`, as the `mysql` command line client does.
 
-If using the MySQL command line utilities such as `mysql` or
-`mysqladmin` you can provide a defaults-file option which stores
-the credentials of the MySQL server you want to connect to. If no
-specific defaults file is mentioned these utilities look in `~/.my.cnf`
-for this file.
+The library reads one option file: the path given, or `~/.my.cnf` if
+none is given. From its `[client]` group it takes `user`, `password`,
+`host`, `port`, `socket` and `database`, and builds a
+[go-sql-driver/mysql](https://github.com/go-sql-driver/mysql)
+configuration or DSN from them.
 
-The Go sql interface does not support this functionality yet it can
-be quite convenient as it avoids the need to explicitly provide credentials.
-
-This small module fills in that gap by providing a function to allow you
-to connect to MySQL using a specified defaults-file, or using the
-`~/.my.cnf` if you do not specify a defaults-file path.
-
-There is also a function BuildDSN which allows you to build up a Go
-dsn for MySQL using various entries in a mysql .ini file.
-
-This logic could be simplified by using
-github.com/go-sql-driver/mysql.Config together with Config.FormatDSN(),
-but there are a few minor differences in behaviour such as the
-default timezone handling using mysql.Config being UTC compared to
-mysql's command line client using the system timezone.
-
-The functions provided are used by [ps-top](http://github.com/sjmudd/ps-top)
-to simplify the connectivity and have been split off from it as they
-may be useful for other programs that connect to MySQL.
-
-The code has been extended to handle quoted usernames and passwords,
-removing whitespace and quotes if found. Quoting with single or
-double quotes is permitted.
+It is used by [ps-top](https://github.com/sjmudd/ps-top).
 
 ### Usage
 
-Usage:
+```go
+package main
 
-```
 import (
-	...
 	"database/sql"
+	"log"
 
-	_ "github.com/go-sql-driver/mysql"
+	"github.com/go-sql-driver/mysql"
 	"github.com/sjmudd/mysql_defaults_file"
-	...
 )
 
-// Get the DSN information from the defaults file, provide the
-// database to connect to and use sql.Open as normal
-db, err = sql.Open("mysql", mysql_defaults_file.DefaultDSN("", "mydb"))
+func main() {
+	// ~/.my.cnf, if it exists. Use Load("/path/to/my.cnf") for a file
+	// that must exist.
+	cfg, err := mysql_defaults_file.LoadOptional("")
+	if err != nil {
+		log.Fatal(err)
+	}
+	mc, err := cfg.MySQLConfig("mydb")
+	if err != nil {
+		log.Fatal(err)
+	}
+	connector, err := mysql.NewConnector(mc)
+	if err != nil {
+		log.Fatal(err)
+	}
+	db := sql.OpenDB(connector)
+	defer db.Close()
 
-// Get the DSN from a non-standard defaults file, provide the
-// database to connect to and use sql.Open as normal
-db, err = sql.Open("mysql", mysql_defaults_file.DefaultDSN("/path/to/.my.cnf", "mydb"))
-
-// open the connection to the database using the default defaults-file (original way).
-db, err = mysql_defaults_file.OpenUsingDefaultsFile("mysql", "", "performance_schema")
-
-// open the connection to the database using the default defaults-file (shorter form).
-db, err = mysql_defaults_file.Open("", "")
-
-// open the connection to the database using a specific defaults-file and to mydb.
-db, err = mysql_defaults_file.Open("/path/to/my.ini", "mydb")
+	if err := db.Ping(); err != nil {
+		log.Fatal(err)
+	}
+}
 ```
 
-The errors you get back will be the same as calling `sql.Open( "mysql",..... )`.
+`Config.DSN("mydb")` returns the same configuration as a DSN string for
+`sql.Open("mysql", dsn)`.
+
+- `Load` returns an error if the file cannot be read. `LoadOptional`
+  treats a file that does not exist as empty, as the MySQL client does
+  for `~/.my.cnf`.
+- A port that is not a number from 0 to 65535 is an error.
+- User defaults to `$USER`. With a socket set, the socket is used.
+  Otherwise TCP to the host (default `127.0.0.1`) and port, where port
+  0 means 3306, as in the MySQL client.
+
+The file is read with the MySQL client's rules: comments, options
+without a value, quoted values, escapes, group names without regard to
+case, and "-" and "_" in option names as the same.
+
+Unlike the MySQL client, the library does not:
+
+- read the other default files (`/etc/my.cnf`, `/etc/mysql/my.cnf`,
+  `$MYSQL_HOME/my.cnf`, `~/.mylogin.cnf`)
+- read the `[mysql]` group
+- follow `!include` or `!includedir`
+
+### Deprecated functions
+
+`NewConfig`, `BuildDSN`, `DefaultDSN`, `OpenUsingDefaultsFile`, `Open`
+and `OpenUsingEnvironment` still work as before, but are deprecated:
+they exit the program instead of returning an error, including on
+valid files with options without a value (such as `skip-ssl`) or
+`!include` lines, and they ignore a port that is not a number and wrap
+one out of range (70000 becomes 4464). Use the functions above instead.
+
+### Development
+
+`make check` runs `gofmt`, `go vet`, `golangci-lint`, the tests and
+`go mod tidy -diff`. `make lint-install` installs the pinned
+`golangci-lint`.
 
 ### Licensing
 
@@ -77,5 +96,6 @@ Feedback and patches welcome.
 Simon J Mudd
 <sjmudd@pobox.com>
 
-### Code Documenton
-[godoc.org/github.com/sjmudd/mysql_defaults_file](http://godoc.org/github.com/sjmudd/mysql_defaults_file)
+### Code Documentation
+
+[pkg.go.dev/github.com/sjmudd/mysql_defaults_file](https://pkg.go.dev/github.com/sjmudd/mysql_defaults_file)
